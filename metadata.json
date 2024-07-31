@@ -1,0 +1,12 @@
+{
+    "name": "Video Answers",
+    "description": "Split normal answers and video answers",
+    "version": "1.0.0",
+    "date": "2024-07-21",
+    "author": "Gabriel Zanetti",
+    "author_uri": "https://question2answer.org/qa/user/pupi1985",
+    "license": "GPLv3",
+    "min_q2a": "1.8.6",
+    "min_php": "7.4.0",
+    "load_order": "after_db_init"
+}
