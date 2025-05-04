@@ -56,8 +56,17 @@ class qa_html_theme_layer extends qa_html_theme_base
 	{
 		$textContent = qa_viewer_text($answer['raw']['content'], $answer['raw']['format']);
 
-		return qa_strlen($textContent) <= 300 && preg_match(self::YOUTUBE_REGEX, $textContent);
+		// Check for YouTube match
+		if (preg_match(self::YOUTUBE_REGEX, $textContent, $match)) {
+			// Remove the matched YouTube portion from text
+			$textWithoutVideo = str_replace($match[0], '', $textContent);
+			return qa_strlen($textWithoutVideo) <= 300;
+		}
+
+		// No match found, use full length
+		return qa_strlen($textContent) <= 10;
 	}
+
 
 	private function replaceLinkWithIframe($text)
 	{
@@ -90,6 +99,7 @@ class qa_html_theme_layer extends qa_html_theme_base
 	{
 		$isVideoAnswer = $this->isVideoAnswer($a_item);
 		if ($isVideoAnswer) {
+			//			echo "$('#arsu_va_videoAnswersContainer').show()";
 			$this->performVideoHtmlReplacements($a_item);
 		}
 
