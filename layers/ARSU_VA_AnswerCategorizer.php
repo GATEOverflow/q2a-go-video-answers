@@ -60,11 +60,11 @@ class qa_html_theme_layer extends qa_html_theme_base
 		if (preg_match(self::YOUTUBE_REGEX, $textContent, $match)) {
 			// Remove the matched YouTube portion from text
 			$textWithoutVideo = str_replace($match[0], '', $textContent);
-			return qa_strlen($textWithoutVideo) <= 300;
+			return qa_strlen($textWithoutVideo) <= 10;
 		}
 
 		// No match found, use full length
-		return qa_strlen($textContent) <= 10;
+		return False; //qa_strlen($textContent) <= 10;
 	}
 
 
