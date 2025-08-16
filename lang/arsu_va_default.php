@@ -10,4 +10,5 @@ return array(
 
     ARSU_VA_Constants::LANG_ID_STADARD_ANSWERS_TAB_LABEL => 'Standard answers',
     ARSU_VA_Constants::LANG_ID_VIDEO_ANSWERS_TAB_LABEL => 'Video answers',
+	ARSU_VA_Constants::LANG_ID_NO_ANSWERS_MESSAGE => 'No answers available.',
 );

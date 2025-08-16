@@ -39,7 +39,7 @@
     margin-bottom: -1px;
 }
 
-.arsu_va_tab-content {
+label.arsu_va_tab ~ .arsu_va_tab-content {
     border-top: 1px solid #ccc;
 }
 
