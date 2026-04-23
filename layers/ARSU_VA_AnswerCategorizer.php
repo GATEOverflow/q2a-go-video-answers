@@ -106,13 +106,15 @@ class qa_html_theme_layer extends qa_html_theme_base
 
             $a_form['fields']['arsu_va_is_video'] = [
                 'type' => 'custom',
-                'html' => '<div class="arsu-va-toggle" style="' . $hideStyle . 'margin:8px 0;padding:8px 12px;border:1px solid var(--ex-border,#e0e0e0);border-radius:8px;background:var(--ex-bg-alt,#fafafa)">'
+                'html' => '<div class="arsu-va-toggle" style="' . $hideStyle . 'margin:8px 0;padding:8px 12px;border:1px solid var(--qam-border,#e0e0e0);border-radius:8px;background:var(--qam-bg-alt,#fafafa);color:var(--qam-text,inherit)">'
                     . '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9em">'
                     . '<input type="checkbox" name="arsu_va_is_video" value="1"' . $checked . ' style="width:16px;height:16px">'
                     . '<span>&#127909; Mark as video answer</span>'
                     . '</label>'
-                    . '<div style="font-size:0.78em;color:var(--ex-text-muted,#757575);margin-top:2px;padding-left:24px">Video answers are shown in a separate tab for easy access</div>'
-                    . '</div>',
+                    . '<div style="font-size:0.78em;color:var(--qam-text-muted,#757575);margin-top:2px;padding-left:24px">Video answers are shown in a separate tab for easy access</div>'
+                    . '</div>'
+                    . '<style>.arsu-va-toggle{--qam-border:#e0e0e0;--qam-bg-alt:#fafafa;--qam-text:inherit;--qam-text-muted:#757575}'
+                    . 'html:not([data-theme="light"]) .arsu-va-toggle{--qam-border:#444;--qam-bg-alt:#2a2a2a;--qam-text:#e0e0e0;--qam-text-muted:#999}</style>',
             ];
 
             // Inject JS once to auto-show/hide the toggle when a video link is detected
