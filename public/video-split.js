@@ -1,142 +1,89 @@
-// === Plugin configuration ===
-const arsu_va_config = {
-    // Set to true to always show tabs, even when only one answer type is present
-    showSingleTab: false
-};
+// === Video/Standard Answer Tab Splitter ===
 
-// === Helper Functions ===
+(function() {
+    const aList = document.getElementById('a_list');
+    if (!aList || typeof arsu_va_options === 'undefined') return;
 
-function createInputElement(id, name, isChecked = false) {
-    const input = document.createElement('input');
-    input.type = 'radio';
-    input.id = id;
-    input.name = name;
-    if (isChecked) input.checked = true;
-    return input;
-}
+    const answers = arsu_va_options.answers || {};
+    const lang = arsu_va_options.lang || {};
 
-function createLabelElement(forId, text) {
-    const label = document.createElement('label');
-    label.className = 'arsu_va_tab';
-    label.setAttribute('for', forId);
-    label.textContent = text;
-    return label;
-}
-
-function createSectionElement(sectionObject) {
-    const section = document.createElement('section');
-    section.className = 'arsu_va_tab-panel';
-    section.id = sectionObject.id;
-
-    sectionObject.content.forEach(domId => {
-        const domElement = document.getElementById(domId);
-        if (domElement) {
-            section.appendChild(domElement);
-        }
+    // Group answer DOM IDs by type
+    const groups = { standard: [], video: [] };
+    Object.entries(answers).forEach(([domId, type]) => {
+        if (groups[type]) groups[type].push(domId);
     });
 
-    return section;
-}
+    const hasStandard = groups.standard.length > 0;
+    const hasVideo = groups.video.length > 0;
 
-function getSectionIds(answerType) {
-    return Object.entries(arsu_va_options['answers'])
-        .filter(([_, value]) => value === answerType)
-        .map(([key, _]) => key);
-}
+    // Only one type (or no answers) — leave DOM untouched, no tabs needed
+    if (!hasStandard || !hasVideo) return;
 
-// === Main Tab Logic ===
+    // === Build tab UI (both types present) ===
 
-function createTabStructure() {
-    const aList = document.getElementById('a_list');
-	
-	// Create tab inputs and labels
-    const contentTypes = [
-        { type: 'standard', label: arsu_va_options.lang.standard_answers_tab_label },
-        { type: 'video', label: arsu_va_options.lang.video_answers_tab_label }
+    const tabs = [
+        { type: 'standard', label: lang.standard_answers_tab_label || 'Standard answers' },
+        { type: 'video',    label: lang.video_answers_tab_label || 'Video answers' }
     ];
 
-    // Determine which tabs have actual content
-    const availableTabs = contentTypes
-        .map(tab => {
-            const ids = getSectionIds(tab.type);
-            return ids.length > 0 ? { ...tab, content: ids } : null;
-        })
-        .filter(Boolean);
+    const tabBar = document.createElement('div');
+    tabBar.className = 'arsu_va_tab-bar';
 
-    // Case: no answers at all
-    if (availableTabs.length === 0) {
-        const message = document.createElement('p');
-        message.textContent = arsu_va_options.lang.no_answers_message || "No answers available.";
-        aList.appendChild(message);
-        return;
-    }
-
-    // Case: only one answer type and tabs disabled for that
-    const isSingleTab = availableTabs.length === 1;
-
-    // Add inputs and conditionally add labels
-    availableTabs.forEach((tab, index) => {
-        aList.appendChild(createInputElement(`arsu_va_tab-${tab.type}`, 'tabset', index === 0));
-
-        const shouldShowLabel = !isSingleTab || arsu_va_config.showSingleTab;
-        if (shouldShowLabel) {
-            aList.appendChild(createLabelElement(`arsu_va_tab-${tab.type}`, tab.label));
-        }
+    tabs.forEach((tab, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'arsu_va_tab' + (i === 0 ? ' arsu_va_active' : '');
+        btn.textContent = tab.label;
+        btn.dataset.type = tab.type;
+        btn.addEventListener('click', () => switchTab(tab.type));
+        tabBar.appendChild(btn);
     });
 
-    // Create tab content
+    // Insert tab bar before answers
+    aList.insertBefore(tabBar, aList.firstChild);
+
+    // Wrap answers into sections
     const tabContent = document.createElement('div');
     tabContent.className = 'arsu_va_tab-content';
 
-    availableTabs.forEach(tab => {
-        const section = createSectionElement({
-            id: `arsu_va_${tab.type}AnswersContainer`,
-            content: tab.content
+    tabs.forEach((tab, i) => {
+        const section = document.createElement('section');
+        section.className = 'arsu_va_tab-panel' + (i === 0 ? ' arsu_va_active' : '');
+        section.id = 'arsu_va_' + tab.type + 'AnswersContainer';
+
+        groups[tab.type].forEach(domId => {
+            const el = document.getElementById(domId);
+            if (el) section.appendChild(el);
         });
+
         tabContent.appendChild(section);
     });
 
     aList.appendChild(tabContent);
-}
 
-createTabStructure();
+    function switchTab(type) {
+        tabBar.querySelectorAll('.arsu_va_tab').forEach(btn => {
+            btn.classList.toggle('arsu_va_active', btn.dataset.type === type);
+        });
+        tabContent.querySelectorAll('.arsu_va_tab-panel').forEach(panel => {
+            panel.classList.toggle('arsu_va_active', panel.id === 'arsu_va_' + type + 'AnswersContainer');
+        });
+    }
 
-// === Observe for Dynamic Additions ===
-
-window.addEventListener('load', () => {
-    const observeDOM = (() => {
-        const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-
-        return (obj, callback) => {
-            if (!obj || obj.nodeType !== 1) return;
-
-            if (MutationObserver) {
-                const mutationObserver = new MutationObserver(callback);
-                mutationObserver.observe(obj, { childList: true });
-                return mutationObserver;
-            } else if (window.addEventListener) {
-                obj.addEventListener('DOMNodeInserted', callback, false);
-            }
-        };
-    })();
-
-    const aList = document.getElementById('a_list');
-
-    observeDOM(aList, mutations => {
+    // === Observe for dynamically added answers ===
+    const observer = new MutationObserver(mutations => {
         mutations.forEach(record => {
             record.addedNodes.forEach(node => {
-                if (node.dataset?.answerType) {
-                    const parent = document.getElementById(`arsu_va_${node.dataset.answerType}AnswersContainer`);
-                    if (parent) {
-                        parent.prepend(node);
-                    }
-
-                    const tab = document.getElementById(`arsu_va_tab-${node.dataset.answerType}`);
-                    if (tab) {
-                        tab.checked = true;
+                if (node.nodeType === 1 && node.dataset && node.dataset.answerType) {
+                    const type = node.dataset.answerType;
+                    const container = document.getElementById('arsu_va_' + type + 'AnswersContainer');
+                    if (container) {
+                        container.prepend(node);
+                        switchTab(type);
                     }
                 }
             });
         });
     });
-});
+    observer.observe(aList, { childList: true });
+})();
